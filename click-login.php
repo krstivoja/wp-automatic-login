@@ -45,28 +45,33 @@ function automatic_admin_login_script() {
     }
 }
 
-// Handle the admin login
+// Handle the admin login securely
 add_action('wp_ajax_one_click_admin_login', 'handle_one_click_admin_login');
 add_action('wp_ajax_nopriv_one_click_admin_login', 'handle_one_click_admin_login');
 
 function handle_one_click_admin_login() {
-    if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'one_click_login_nonce')) {
-        wp_die('Security check failed.');
-    }
+    // Check the nonce for security
+    check_ajax_referer('one_click_login_nonce', '_wpnonce');
     
+    // Validate the IP (ensure it's from the allowed one)
+    $saved_ip = get_option('one_click_admin_ip');
+    if ($saved_ip && $_SERVER['REMOTE_ADDR'] !== $saved_ip) {
+        wp_die('Unauthorized access.');
+    }
+
     $selected_admin_id = get_option('one_click_admin_user');
     $admin_user = get_user_by('ID', $selected_admin_id);
-    
-    if ($admin_user) {
-        wp_set_auth_cookie($admin_user->ID);
-        
-        // Redirect to the original page or dashboard if no redirect is specified
-        $redirect_to = isset($_GET['redirect_to']) ? $_GET['redirect_to'] : admin_url();
-        wp_redirect($redirect_to);
-        exit;
-    } else {
-        wp_die('Admin user not found.');
+
+    // Ensure that the user exists and is an admin
+    if (!$admin_user || !user_can($admin_user, 'administrator')) {
+        wp_die('Invalid admin user.');
     }
+    
+    // Set the auth cookie and redirect to the original page
+    wp_set_auth_cookie($admin_user->ID);
+    $redirect_to = isset($_GET['redirect_to']) ? $_GET['redirect_to'] : admin_url();
+    wp_redirect($redirect_to);
+    exit;
 }
 
 // Add settings page
