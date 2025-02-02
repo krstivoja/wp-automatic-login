@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Automatic Admin Login
- * Description: Automatically logs in an admin user if accessed from a specified IP.
- * Version: 1.4
+ * Description: Automatically logs in an admin user if accessed from a specified IP or display the current user IP if the checkbox is enabled.
+ * Version: 1.5
  * Author: Marko Krstic
  */
 
@@ -17,7 +17,19 @@ function automatic_admin_login_script() {
     $saved_ip = get_option('one_click_admin_ip');
     $selected_admin_id = get_option('one_click_admin_user');
     $user_ip = $_SERVER['REMOTE_ADDR'];
+    $show_ip = get_option('one_click_show_ip', false); // Get the option for showing IP
+
+    // Check if show IP is enabled
+    if ($show_ip) {
+        echo "<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            alert('Your IP address is: " . $user_ip . "');
+        });
+        </script>";
+        return; // Exit the function here to prevent further action
+    }
     
+    // Automatic login logic
     if ($saved_ip && $user_ip === $saved_ip && $selected_admin_id) {
         $login_url = admin_url('admin-ajax.php?action=one_click_admin_login');
         $login_url = add_query_arg('_wpnonce', wp_create_nonce('one_click_login_nonce'), $login_url);
@@ -25,7 +37,7 @@ function automatic_admin_login_script() {
      document.addEventListener('DOMContentLoaded', function() {
          setTimeout(function() {
              window.location.href = '" . $login_url . "';
-         }, 1000);
+         }, 200);
      });
  </script>";
     }
@@ -66,13 +78,21 @@ function one_click_admin_settings_page_html() {
     
     if (isset($_POST['one_click_admin_user']) && isset($_POST['one_click_admin_ip'])) {
         check_admin_referer('one_click_admin_settings');
-        update_option('one_click_admin_user', intval($_POST['one_click_admin_user']));
-        update_option('one_click_admin_ip', sanitize_text_field($_POST['one_click_admin_ip']));
+        
+        $admin_user_id = isset($_POST['one_click_admin_user']) ? intval($_POST['one_click_admin_user']) : 0;
+        $admin_ip = isset($_POST['one_click_admin_ip']) ? sanitize_text_field($_POST['one_click_admin_ip']) : '';
+        $show_ip = isset($_POST['one_click_show_ip']) ? true : false;
+
+        update_option('one_click_admin_user', $admin_user_id);
+        update_option('one_click_admin_ip', $admin_ip);
+        update_option('one_click_show_ip', $show_ip); // Save the checkbox value
+        
         echo '<div class="updated"><p>Settings saved.</p></div>';
     }
     
     $selected_admin = get_option('one_click_admin_user');
     $saved_ip = get_option('one_click_admin_ip');
+    $show_ip = get_option('one_click_show_ip', false); // Get the current setting for show IP
     $users = get_users(['role__in' => ['administrator']]);
     ?>
     <div class="wrap">
@@ -93,6 +113,13 @@ function one_click_admin_settings_page_html() {
                 <tr>
                     <th>Allowed IP for Auto-Login:</th>
                     <td><input type="text" name="one_click_admin_ip" value="<?php echo esc_attr($saved_ip); ?>" /></td>
+                </tr>
+                <tr>
+                    <th>Show IP instead of Auto-Login:</th>
+                    <td>
+                        <input type="checkbox" name="one_click_show_ip" value="1" <?php checked($show_ip, true); ?> />
+                        <label for="one_click_show_ip">Display current user IP on page load</label>
+                    </td>
                 </tr>
             </table>
             <?php submit_button('Save Settings'); ?>
