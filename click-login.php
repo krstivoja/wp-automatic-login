@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Automatic Admin Login
  * Description: Automatically logs in an admin user if accessed from a specified IP or display the current user IP if the checkbox is enabled.
- * Version: 1.5
+ * Version: 1.6
  * Author: Marko Krstic
  */
 
@@ -31,7 +31,9 @@ function automatic_admin_login_script() {
     
     // Automatic login logic
     if ($saved_ip && $user_ip === $saved_ip && $selected_admin_id) {
-        $login_url = admin_url('admin-ajax.php?action=one_click_admin_login');
+        // Get the current page URL to return to after login
+        $current_url = $_SERVER['REQUEST_URI'];
+        $login_url = admin_url('admin-ajax.php?action=one_click_admin_login&redirect_to=' . urlencode($current_url));
         $login_url = add_query_arg('_wpnonce', wp_create_nonce('one_click_login_nonce'), $login_url);
         echo "<script>
      document.addEventListener('DOMContentLoaded', function() {
@@ -57,7 +59,10 @@ function handle_one_click_admin_login() {
     
     if ($admin_user) {
         wp_set_auth_cookie($admin_user->ID);
-        wp_redirect(admin_url());
+        
+        // Redirect to the original page or dashboard if no redirect is specified
+        $redirect_to = isset($_GET['redirect_to']) ? $_GET['redirect_to'] : admin_url();
+        wp_redirect($redirect_to);
         exit;
     } else {
         wp_die('Admin user not found.');
