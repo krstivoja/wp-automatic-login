@@ -170,14 +170,14 @@ function one_click_admin_settings_page_html() {
     <template id="login-row-template">
         <tr class="login-pair-row">
             <td>
-                <select name="login_pairs[__INDEX__][admin]">
+                <select name="login_pairs[__INDEX__][admin]" style="width: 100%;">
                     <?php foreach ($users as $user): ?>
                     <option value="<?php echo esc_attr($user->ID); ?>"><?php echo esc_html($user->display_name); ?></option>
                     <?php endforeach; ?>
                 </select>
             </td>
             <td>
-                <input type="text" name="login_pairs[__INDEX__][ip]" value="" />
+                <input type="text" name="login_pairs[__INDEX__][ip]" value="" style="width: 100%;" />
             </td>
             <td>
                 <button type="button" class="delete-row button">Delete</button>
