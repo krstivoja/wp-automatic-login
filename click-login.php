@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Automatic Admin Login
  * Description: Automatically logs in an admin user if accessed from a specified IP or displays the current user IP in settings.
- * Version: 1.8
+ * Version: 1.9
  * Author: Marko Krstic
  */
 
@@ -96,11 +96,47 @@ function one_click_admin_settings_page_html() {
                 </tr>
                 <tr>
                     <th>Your Current IP:</th>
-                    <td><strong><?php echo esc_html($current_ip); ?></strong></td>
+                    <td>
+                        <strong id="current-ip"><?php echo esc_html($current_ip); ?></strong>
+                        <button type="button" id="copy-ip" class="button">Copy</button>
+                    </td>
                 </tr>
             </table>
             <?php submit_button('Save Settings'); ?>
         </form>
     </div>
+    <script>
+document.addEventListener("DOMContentLoaded", function() {
+    let copyButton = document.getElementById("copy-ip");
+
+    if (!navigator.clipboard) {
+        console.warn("Clipboard API not supported. Falling back to manual selection.");
+        copyButton.addEventListener("click", function() {
+            let ipElement = document.getElementById("current-ip");
+            let range = document.createRange();
+            let selection = window.getSelection();
+
+            range.selectNodeContents(ipElement);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            document.execCommand("copy"); // Fallback for older browsers
+            copyButton.textContent = "Copied!";
+            setTimeout(() => copyButton.textContent = "Copy", 2000);
+        });
+        return;
+    }
+
+    copyButton.addEventListener("click", function() {
+        let ipText = document.getElementById("current-ip").textContent;
+        navigator.clipboard.writeText(ipText).then(function() {
+            copyButton.textContent = "Copied!";
+            setTimeout(() => copyButton.textContent = "Copy", 2000);
+        }).catch(function(err) {
+            console.error("Failed to copy: ", err);
+        });
+    });
+});
+    </script>
     <?php
 }
