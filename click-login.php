@@ -97,8 +97,10 @@ function one_click_admin_settings_page_html() {
                 <tr>
                     <th>Your Current IP:</th>
                     <td>
-                        <strong id="current-ip"><?php echo esc_html($current_ip); ?></strong>
-                        <button type="button" id="copy-ip" class="button">Copy</button>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <strong id="current-ip"><?php echo esc_html($current_ip); ?></strong>
+                            <button type="button" id="copy-ip" class="button">Copy</button>
+                        </div>
                     </td>
                 </tr>
             </table>
