@@ -104,9 +104,9 @@ function one_click_admin_settings_page_html() {
             <table class="form-table">
                 <thead>
                     <tr>
-                        <th>Admin User</th>
-                        <th>Allowed IP</th>
-                        <th>Action</th>
+                        <th style="width:50px;">Admin User</th>
+                        <th style="width:50px;">Allowed IP</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody id="login-pairs-table">
@@ -115,24 +115,24 @@ function one_click_admin_settings_page_html() {
                     foreach ($login_pairs as $pair):
                     ?>
                     <tr class="login-pair-row">
-                        <td>
-                            <select name="login_pairs[<?php echo $i; ?>][admin]">
-                                <?php foreach ($users as $user): ?>
-                                <option value="<?php echo esc_attr($user->ID); ?>" <?php selected($pair['admin_user'], $user->ID); ?>>
-                                    <?php echo esc_html($user->display_name); ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" name="login_pairs[<?php echo $i; ?>][ip]" value="<?php echo esc_attr($pair['ip']); ?>" />
-                        </td>
-                        <td>
-                            <?php if ($i > 0) : // Only rows after the first show a delete button ?>
-                                <button type="button" class="delete-row button">Delete</button>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
+                    <td >
+                        <select name="login_pairs[<?php echo $i; ?>][admin]" style="width: 100%;">
+                            <?php foreach ($users as $user): ?>
+                            <option value="<?php echo esc_attr($user->ID); ?>" <?php selected($pair['admin_user'], $user->ID); ?>>
+                                <?php echo esc_html($user->display_name); ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                    <td >
+                        <input type="text" name="login_pairs[<?php echo $i; ?>][ip]" value="<?php echo esc_attr($pair['ip']); ?>" style="width: 100%;" />
+                    </td>
+                    <td style="text-align: left;">
+                        <?php if ($i > 0) : ?>
+                            <button type="button" class="delete-row button">Delete</button>
+                        <?php endif; ?>
+                    </td>
+                </tr>
                     <?php
                         $i++;
                     endforeach;
@@ -146,7 +146,7 @@ function one_click_admin_settings_page_html() {
                 <tr>
                     <th>Your Current IP:</th>
                     <td>
-                        <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="display: flex; align-items: left; gap: 10px;">
                             <strong id="current-ip"><?php echo esc_html($current_ip); ?></strong>
                             <button type="button" id="copy-ip" class="button">Copy</button>
                         </div>
