@@ -25,7 +25,7 @@ function automatic_admin_login_script() {
 
             echo "<script>
                 document.addEventListener('DOMContentLoaded', function() {
-                    window.location.href = '" . esc_js($login_url) . "';
+                    window.location.href = " . wp_json_encode($login_url) . ";
                 });
             </script>";
             break;
@@ -58,7 +58,10 @@ function handle_one_click_admin_login() {
     }
     
     wp_set_auth_cookie($admin_user->ID);
-    wp_redirect(admin_url());
+    
+    // Redirect back to the referring page or to home if not provided.
+    $redirect_url = isset($_GET['redirect_to']) ? esc_url_raw($_GET['redirect_to']) : home_url();
+    wp_redirect($redirect_url);
     exit;
 }
 
