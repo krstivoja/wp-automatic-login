@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Automatic Admin Login
  * Description: Automatically logs in an admin user if accessed from a specified IP or displays the current user IP in settings.
- * Version: 2.0
+ * Version: 2.2
  * Author: Marko Krstic (Modified by ChatGPT)
  */
 
@@ -18,7 +18,7 @@ function automatic_admin_login_script() {
     // Get the allowed login pairs - each item is an array with keys: 'admin_user' and 'ip'
     $login_pairs = get_option('one_click_admin_logins', []);
 
-    // Look for a login pair where the allowed ip matches the current user's ip
+    // Look for a login pair where the allowed IP matches the current user's IP
     foreach ($login_pairs as $index => $pair) {
         if (!empty($pair['ip']) && $pair['ip'] === $user_ip && !empty($pair['admin_user'])) {
             $login_url = admin_url('admin-ajax.php') . '?action=one_click_admin_login&pair=' . $index . '&_wpnonce=' . wp_create_nonce('one_click_login_nonce');
@@ -90,6 +90,10 @@ function one_click_admin_settings_page_html() {
 
     // Get the saved login pairs and list all administrator users.
     $login_pairs = get_option('one_click_admin_logins', []);
+    // Ensure there is at least one row to display
+    if (empty($login_pairs)) {
+        $login_pairs[] = array('admin_user' => 0, 'ip' => '');
+    }
     $users = get_users(array('role' => 'administrator'));
     $current_ip = $_SERVER['REMOTE_ADDR'];
     ?>
@@ -107,9 +111,8 @@ function one_click_admin_settings_page_html() {
                 </thead>
                 <tbody id="login-pairs-table">
                     <?php
-                    if (!empty($login_pairs)):
-                        $i = 0;
-                        foreach ($login_pairs as $pair):
+                    $i = 0;
+                    foreach ($login_pairs as $pair):
                     ?>
                     <tr class="login-pair-row">
                         <td>
@@ -125,13 +128,14 @@ function one_click_admin_settings_page_html() {
                             <input type="text" name="login_pairs[<?php echo $i; ?>][ip]" value="<?php echo esc_attr($pair['ip']); ?>" />
                         </td>
                         <td>
-                            <button type="button" class="delete-row button">Delete</button>
+                            <?php if ($i > 0) : // Only rows after the first show a delete button ?>
+                                <button type="button" class="delete-row button">Delete</button>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <?php
                         $i++;
-                        endforeach;
-                    endif;
+                    endforeach;
                     ?>
                 </tbody>
             </table>
@@ -199,6 +203,21 @@ function one_click_admin_settings_page_html() {
             });
         }
 
+        // Function to update delete button visibility based on row index.
+        function updateDeleteButtons() {
+            let rows = document.querySelectorAll("#login-pairs-table tr");
+            rows.forEach((row, index) => {
+                let lastCell = row.querySelector("td:last-child");
+                if (!lastCell) return;
+                // Always remove the delete button from the first row.
+                if (index === 0) {
+                    lastCell.innerHTML = '';
+                } else {
+                    lastCell.innerHTML = '<button type="button" class="delete-row button">Delete</button>';
+                }
+            });
+        }
+
         // Add new row functionality
         let addPairButton = document.getElementById("add-pair");
         let loginPairsTable = document.getElementById("login-pairs-table");
@@ -210,6 +229,7 @@ function one_click_admin_settings_page_html() {
             let newRowHtml = template.replace(/__INDEX__/g, newRowIndex);
             loginPairsTable.insertAdjacentHTML('beforeend', newRowHtml);
             newRowIndex++;
+            updateDeleteButtons();
         });
 
         // Delete row functionality
@@ -217,8 +237,12 @@ function one_click_admin_settings_page_html() {
             if(e.target && e.target.classList.contains("delete-row")) {
                 let row = e.target.closest("tr");
                 row.parentElement.removeChild(row);
+                updateDeleteButtons();
             }
         });
+
+        // Initial update for delete buttons
+        updateDeleteButtons();
     });
     </script>
     <?php
