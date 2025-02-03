@@ -101,6 +101,17 @@ function one_click_admin_settings_page_html() {
         <h1>Automatic Admin Login Settings</h1>
         <form method="post">
             <?php wp_nonce_field('one_click_admin_settings'); ?>
+            <table class="form-table" style="margin-top: 20px;">
+                <tr>
+                    <th>Your Current IP:</th>
+                    <td>
+                        <div style="display: flex; align-items: left; gap: 10px;">
+                            <strong id="current-ip"><?php echo esc_html($current_ip); ?></strong>
+                            <button type="button" id="copy-ip" class="button">Copy</button>
+                        </div>
+                    </td>
+                </tr>
+            </table>
             <table class="form-table">
                 <thead>
                     <tr>
@@ -139,21 +150,20 @@ function one_click_admin_settings_page_html() {
                     ?>
                 </tbody>
             </table>
-            <p>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
                 <button type="button" id="add-pair" class="button">Add New Row</button>
-            </p>
-            <table class="form-table" style="margin-top: 20px;">
-                <tr>
-                    <th>Your Current IP:</th>
-                    <td>
-                        <div style="display: flex; align-items: left; gap: 10px;">
-                            <strong id="current-ip"><?php echo esc_html($current_ip); ?></strong>
-                            <button type="button" id="copy-ip" class="button">Copy</button>
-                        </div>
-                    </td>
-                </tr>
-            </table>
-            <?php submit_button('Save Settings'); ?>
+                <?php submit_button('Save Settings'); ?>
+            </div>
+
+            <style>
+                .submit {
+                    margin: 0px !important;
+                    padding: 0px !important;
+                }
+            </style>
+
+            
         </form>
     </div>
     <!-- Hidden template used for adding new login pair rows -->
