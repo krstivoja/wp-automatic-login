@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Automatic Admin Login
- * Description: Automatically logs in an admin user if accessed from a specified IP or displays the current user IP if the checkbox is enabled.
- * Version: 1.6
+ * Description: Automatically logs in an admin user if accessed from a specified IP or displays the current user IP in settings.
+ * Version: 1.8
  * Author: Marko Krstic
  */
 
@@ -17,32 +17,14 @@ function automatic_admin_login_script() {
     $user_ip = $_SERVER['REMOTE_ADDR'];
     $saved_ip = get_option('one_click_admin_ip');
     $selected_admin_id = get_option('one_click_admin_user');
-    $show_ip = get_option('one_click_show_ip', false); 
 
-    // Check if show IP is enabled
-    if ($show_ip) {
-        echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                alert('Your IP address is: " . esc_js($user_ip) . "');
-            });
-        </script>";
-        return; // Exit the function here to prevent further action
-    }
-
-    // Automatic login logic
+    // Auto-login if IP matches
     if ($saved_ip === $user_ip && $selected_admin_id) {
-        $current_url = $_SERVER['REQUEST_URI'];
-        $login_url = add_query_arg([
-            'action' => 'one_click_admin_login',
-            'redirect_to' => urlencode($current_url),
-            '_wpnonce' => wp_create_nonce('one_click_login_nonce')
-        ], admin_url('admin-ajax.php'));
+        $login_url = admin_url('admin-ajax.php') . '?action=one_click_admin_login&_wpnonce=' . wp_create_nonce('one_click_login_nonce');
 
         echo "<script>
             document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(function() {
-                    window.location.href = '" . esc_url($login_url) . "';
-                }, 200);
+                window.location.href = '" . esc_js($login_url) . "';
             });
         </script>";
     }
@@ -53,27 +35,17 @@ add_action('wp_ajax_one_click_admin_login', 'handle_one_click_admin_login');
 add_action('wp_ajax_nopriv_one_click_admin_login', 'handle_one_click_admin_login');
 
 function handle_one_click_admin_login() {
-    // Check the nonce for security
     check_ajax_referer('one_click_login_nonce', '_wpnonce');
-
-    // Validate the IP (ensure it's from the allowed one)
-    $saved_ip = get_option('one_click_admin_ip');
-    if ($saved_ip && $_SERVER['REMOTE_ADDR'] !== $saved_ip) {
-        wp_die('Unauthorized access.');
-    }
 
     $selected_admin_id = get_option('one_click_admin_user');
     $admin_user = get_user_by('ID', $selected_admin_id);
 
-    // Ensure that the user exists and is an admin
     if (!$admin_user || !user_can($admin_user, 'administrator')) {
         wp_die('Invalid admin user.');
     }
 
-    // Set the auth cookie and redirect to the original page
     wp_set_auth_cookie($admin_user->ID);
-    $redirect_to = isset($_GET['redirect_to']) ? $_GET['redirect_to'] : admin_url();
-    wp_redirect($redirect_to);
+    wp_redirect(admin_url());
     exit;
 }
 
@@ -89,23 +61,17 @@ function one_click_admin_settings_page_html() {
         return;
     }
 
-    // Process form submission
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_admin_referer('one_click_admin_settings')) {
-        $admin_user_id = isset($_POST['one_click_admin_user']) ? intval($_POST['one_click_admin_user']) : 0;
-        $admin_ip = isset($_POST['one_click_admin_ip']) ? sanitize_text_field($_POST['one_click_admin_ip']) : '';
-        $show_ip = isset($_POST['one_click_show_ip']) && $_POST['one_click_show_ip'] === '1';
-
-        update_option('one_click_admin_user', $admin_user_id);
-        update_option('one_click_admin_ip', $admin_ip);
-        update_option('one_click_show_ip', $show_ip);
+    if (!empty($_POST['one_click_admin_user']) && check_admin_referer('one_click_admin_settings')) {
+        update_option('one_click_admin_user', intval($_POST['one_click_admin_user']));
+        update_option('one_click_admin_ip', sanitize_text_field($_POST['one_click_admin_ip'] ?? ''));
 
         echo '<div class="updated"><p>Settings saved.</p></div>';
     }
 
     $selected_admin = get_option('one_click_admin_user');
     $saved_ip = get_option('one_click_admin_ip');
-    $show_ip = get_option('one_click_show_ip', false);
     $users = get_users(['role' => 'administrator']);
+    $current_ip = $_SERVER['REMOTE_ADDR'];
     ?>
     <div class="wrap">
         <h1>Automatic Admin Login Settings</h1>
@@ -129,11 +95,8 @@ function one_click_admin_settings_page_html() {
                     <td><input type="text" name="one_click_admin_ip" value="<?php echo esc_attr($saved_ip); ?>" /></td>
                 </tr>
                 <tr>
-                    <th>Show IP instead of Auto-Login:</th>
-                    <td>
-                        <input type="checkbox" name="one_click_show_ip" value="1" <?php checked($show_ip, true); ?> />
-                        <label for="one_click_show_ip">Display current user IP on page load</label>
-                    </td>
+                    <th>Your Current IP:</th>
+                    <td><strong><?php echo esc_html($current_ip); ?></strong></td>
                 </tr>
             </table>
             <?php submit_button('Save Settings'); ?>
