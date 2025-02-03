@@ -79,8 +79,8 @@ function one_click_admin_settings_page_html() {
             <?php wp_nonce_field('one_click_admin_settings'); ?>
             <table class="form-table">
                 <tr>
-                    <th>Select Admin User:</th>
                     <td>
+                        <p>Select Admin User:</p>
                         <select name="one_click_admin_user">
                             <?php foreach ($users as $user) : ?>
                                 <option value="<?php echo esc_attr($user->ID); ?>" <?php selected($selected_admin, $user->ID); ?>>
@@ -89,11 +89,11 @@ function one_click_admin_settings_page_html() {
                             <?php endforeach; ?>
                         </select>
                     </td>
-                </tr>
-                <tr>
-                    <th>Allowed IP for Auto-Login:</th>
-                    <td><input type="text" name="one_click_admin_ip" value="<?php echo esc_attr($saved_ip); ?>" /></td>
-                </tr>
+                    <td>
+                        <p>Allowed IP for Auto-Login:</p>
+                        <input type="text" name="one_click_admin_ip" value="<?php echo esc_attr($saved_ip); ?>" />
+                    </td>
+                </tr>                
                 <tr>
                     <th>Your Current IP:</th>
                     <td>
